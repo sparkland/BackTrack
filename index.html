@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BackTrack">
+  <title>BackTrack</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header id="app-header">
+    <div id="app-logo">
+      <span class="logo-icon">&#9654;</span>
+      <span class="logo-text">BackTrack</span>
+    </div>
+    <div id="header-actions">
+      <button id="btn-add-page" class="header-btn" title="Add new page">+ Page</button>
+      <button id="btn-remove-page" class="header-btn header-btn-danger hidden" title="Remove this page">&#8722; Page</button>
+      <button id="btn-settings" class="header-btn" title="Settings">&#9881;</button>
+      <button id="btn-about" class="header-btn" title="About">&#9432;</button>
+    </div>
+  </header>
+
+  <!-- Storage warning banner (hidden by default) -->
+  <div id="storage-warning" class="hidden">
+    <span>&#9888; Storage unavailable in this mode. Audio files won't persist after reload.</span>
+  </div>
+
+  <!-- Main stage -->
+  <main id="stage">
+    <div id="page-strip"></div>
+  </main>
+
+  <!-- Page navigation -->
+  <nav id="page-nav">
+    <button id="btn-prev" class="nav-arrow" title="Previous page">&#8249;</button>
+    <div id="dot-indicators"></div>
+    <button id="btn-next" class="nav-arrow" title="Next page">&#8250;</button>
+  </nav>
+
+  <!-- Audio player (fixed bottom-right) -->
+  <div id="player" class="hidden">
+    <button id="btn-player-close" title="Close player">&#10005;</button>
+    <div id="player-track-title">No track loaded</div>
+    <div id="player-controls">
+      <button id="btn-rewind" class="player-btn" title="Rewind 10s">&#8606;</button>
+      <button id="btn-play-pause" class="player-btn player-btn-main" title="Play / Pause">&#9654;</button>
+      <button id="btn-stop" class="player-btn" title="Stop">&#9632;</button>
+      <button id="btn-fast-forward" class="player-btn" title="Fast forward 10s">&#8608;</button>
+    </div>
+    <div id="player-seek-row">
+      <span id="time-current">0:00</span>
+      <input type="range" id="seek-bar" min="0" max="100" value="0" step="0.1">
+      <span id="time-total">0:00</span>
+    </div>
+    <audio id="audio-element" preload="none"></audio>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="file-input" accept="audio/*" aria-hidden="true">
+
+  <!-- Modal overlay -->
+  <div id="modal-overlay" class="hidden">
+
+    <!-- Title entry modal -->
+    <div id="modal-title" class="modal hidden">
+      <div class="modal-header">
+        <h2>Name this track</h2>
+      </div>
+      <div class="modal-body">
+        <label for="title-input">Track title</label>
+        <input type="text" id="title-input" placeholder="Enter a title..." maxlength="60" autocomplete="off">
+      </div>
+      <div class="modal-footer">
+        <button id="btn-title-cancel" class="modal-btn modal-btn-secondary">Cancel</button>
+        <button id="btn-title-save" class="modal-btn modal-btn-primary">Save</button>
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div id="modal-settings" class="modal hidden">
+      <div class="modal-header">
+        <h2>Grid Settings</h2>
+      </div>
+      <div class="modal-body">
+        <div class="settings-row">
+          <label for="settings-cols">Columns</label>
+          <input type="number" id="settings-cols" min="2" max="8" value="4">
+        </div>
+        <div class="settings-row">
+          <label for="settings-rows">Rows</label>
+          <input type="number" id="settings-rows" min="2" max="8" value="4">
+        </div>
+        <p class="settings-note">Changing the grid size applies to all pages. Existing assignments are preserved.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-settings-cancel" class="modal-btn modal-btn-secondary">Cancel</button>
+        <button id="btn-settings-save" class="modal-btn modal-btn-primary">Apply</button>
+      </div>
+    </div>
+
+    <!-- Unassign box confirmation modal -->
+    <div id="modal-confirm-unassign" class="modal hidden">
+      <div class="modal-header">
+        <h2>Remove this track?</h2>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-unassign-message" class="confirm-message"></p>
+        <p class="confirm-message confirm-message-sub">This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-confirm-unassign-cancel" class="modal-btn modal-btn-secondary">Cancel</button>
+        <button id="btn-confirm-unassign-ok" class="modal-btn modal-btn-danger">Remove</button>
+      </div>
+    </div>
+
+    <!-- Remove page confirmation modal -->
+    <div id="modal-confirm-remove" class="modal hidden">
+      <div class="modal-header">
+        <h2>Remove this page?</h2>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-message">This page contains assigned tracks. Removing it will permanently delete all tracks on this page.</p>
+        <p class="confirm-message confirm-message-sub">This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-confirm-remove-cancel" class="modal-btn modal-btn-secondary">Cancel</button>
+        <button id="btn-confirm-remove-ok" class="modal-btn modal-btn-danger">Remove Page</button>
+      </div>
+    </div>
+
+    <!-- About modal -->
+    <div id="modal-about" class="modal hidden">
+      <div class="modal-header">
+        <h2>About BackTrack</h2>
+      </div>
+      <div class="modal-body about-body">
+        <div class="about-logo">
+          <span class="logo-icon large">&#9654;</span>
+          <span class="logo-text large">BackTrack</span>
+        </div>
+        <p>A backing track player for musicians.</p>
+        <p>Built by <strong>Mark Craig Robertson</strong><br>using <strong>Claude Code</strong></p>
+        <p class="copyright">&copy; 2026 Mark Craig Robertson.<br>All rights reserved.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-about-close" class="modal-btn modal-btn-primary">Close</button>
+      </div>
+    </div>
+
+  </div><!-- /#modal-overlay -->
+
+  <script src="app.js"></script>
+</body>
+</html>
